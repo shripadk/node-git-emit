@@ -3,6 +3,8 @@ git-emit
 
 Expose git hooks as a single node.js EventEmitter.
 
+COMING SOON.
+
 example
 =======
 
