@@ -1,5 +1,7 @@
-var em = require('git-emit')(__dirname + '/repo');
+// randomly reject 50% of commits
+var em = require('../')(__dirname + '/repo.git');
 
-em.on('pre-commit', function (ok) {
-    ok(Math.random() > 0.5); // randomly reject 50% of commits
+em.on('update', function (update) {
+    if (Math.random() > 0.5) update.reject()
+    else update.accept()
 });
