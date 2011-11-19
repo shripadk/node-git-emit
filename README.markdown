@@ -3,6 +3,9 @@ git-emit
 
 Expose git hooks through an EventEmitter.
 
+This module is super handy when used in conjunction with
+[pushover](https://github.com/substack/pushover).
+
 example
 =======
 
@@ -60,3 +63,109 @@ It works as expected hooray!
 
 methods
 =======
+
+var gitEmit = require('git-emit')
+
+var emitter = gitEmit(repoDir, cb)
+----------------------------------
+
+Install hooks into `repoDir`. `repoDir` should be either a .git directory from
+an existing or new project or just a bare git directory created with
+`git init --bare`.
+
+`repoDir` should not have any existing hooks unless they were created with
+git-emit.
+
+Optionally pass in `cb(err, emitter)` to be notified when the hooks have been
+installed into `repoDir` or an error has occured.
+
+emitter.close()
+---------------
+
+Shut down the dnode listener used internally by git-emit.
+
+events
+======
+
+You can listen for events corresponding to github hooks.
+
+All events receive an update object.
+
+Passive events fire and cannot influence the acceptance any actions.
+
+Abortable events *MUST* respond to the update object with either
+an `update.accept()` or an `update.reject()`.
+
+passive events
+--------------
+
+* post-applypatch
+* post-commit
+* post-checkout
+* post-merge
+* post-receive
+* post-update
+* post-rewrite
+
+abortable events
+----------------
+
+* applypatch-msg
+* pre-applypatch
+* pre-commit
+* prepare-commit-msg
+* commit-msg
+* pre-rebase
+* pre-receive
+* update
+* pre-auto-gc
+
+update object
+=============
+
+All events are passed an update object as the first argument.
+
+Abortable updates *MUST* call `update.accept()` or `update.reject()`.
+
+Since there may be multiple listeners for any update, all listeners must
+`accept()` an update for it to be ultimately accepted.
+
+update.accept()
+---------------
+
+Accept an update.
+
+update.reject()
+---------------
+
+Reject an update.
+
+update.arguments
+----------------
+
+The raw arguments provided to the git hook on the command line.
+
+update.lines
+------------
+
+An array of lines from `process.stdin`.
+
+This attribute is only defined for `pre-recieve`, `post-receieve`, and
+`post-rewrite` hooks.
+
+update.canAbort
+---------------
+
+Whether the update is abortable.
+
+install
+=======
+
+With [npm](http://npmjs.org) do:
+
+    npm install git-emit
+
+license
+=======
+
+MIT/X11
