@@ -18,7 +18,10 @@ module.exports = function (repoDir, cb) {
         this.emit = function (hookName, args, finish) {
             var xs = emitter.listeners(hookName);
             if (xs.length === 0) finish(true)
-            else if (!hook.canAbort[hookName]) finish(true)
+            else if (!hook.canAbort[hookName]) {
+                finish(true);
+                emitter.emit(hookName, hook(hookName, args);
+            }
             else {
                 var pending = xs.length;
                 var allOk = true;
@@ -29,7 +32,6 @@ module.exports = function (repoDir, cb) {
                     }
                 }));
             }
-            console.dir([].slice.call(arguments));
         };
     }).listen(port);
     
