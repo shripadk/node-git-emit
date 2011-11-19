@@ -5,24 +5,26 @@ var EventEmitter = require('events').EventEmitter;
 var dnode = require('dnode');
 var seq = require('seq');
 
-var allHooks = [
-    'applypatch-msg',
-    'pre-applypatch',
-    'post-applypatch',
-    'pre-commit',
-    'prepare-commit-msg',
-    'commit-msg',
-    'post-commit',
-    'pre-rebase',
-    'post-checkout',
-    'post-merge',
-    'pre-receive',
-    'update',
-    'post-receive',
-    'post-update',
-    'pre-auto-gc',
-    'post-rewrite',
-];
+var hook = require('./lib/hook');
+
+var canAbort = {
+    'applypatch-msg' : true,
+    'pre-applypatch' : true,
+    'post-applypatch' : false,
+    'pre-commit' : true,
+    'prepare-commit-msg' : true,
+    'commit-msg' : true,
+    'post-commit' : false,
+    'pre-rebase' : true,
+    'post-checkout' : false,
+    'post-merge' : false,
+    'pre-receive' : true,
+    'update' : true,
+    'post-receive' : false,
+    'post-update' : false,
+    'pre-auto-gc' : true,
+    'post-rewrite' : false,
+};
 
 var hookFile = __dirname + '/bin/hook.js';
 
@@ -33,12 +35,25 @@ module.exports = function (repoDir, cb) {
     var port = Math.floor(Math.random() * ((1<<16) - 1e4) + 1e4);
     
     dnode(function (remote, conn) {
-        this.emit = function () {
+        this.emit = function (hookName, args, finish) {
+            var xs = emitter.listeners(hookName);
+            if (xs.length === 0) finish(true)
+            else if (!canAbort[hookName]) finish(true)
+            else {
+                var pending = xs.length;
+                var allOk = true;
+                emitter.emit(hookName, hook(hookName, args, function (ok) {
+                    allOk = allOk && ok;
+                    if (--pending === 0) {
+                        finish(allOk);
+                    }
+                }));
+            }
             console.dir([].slice.call(arguments));
         };
     }).listen(port);
     
-    seq(allHooks)
+    seq(Object.keys(canAbort))
         .seq(function () {
             fs.writeFile(hookDir + '/.git-emit.port', port.toString(), this);
         })
