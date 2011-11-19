@@ -6,26 +6,6 @@ var dnode = require('dnode');
 var seq = require('seq');
 
 var hook = require('./lib/hook');
-
-var canAbort = {
-    'applypatch-msg' : true,
-    'pre-applypatch' : true,
-    'post-applypatch' : false,
-    'pre-commit' : true,
-    'prepare-commit-msg' : true,
-    'commit-msg' : true,
-    'post-commit' : false,
-    'pre-rebase' : true,
-    'post-checkout' : false,
-    'post-merge' : false,
-    'pre-receive' : true,
-    'update' : true,
-    'post-receive' : false,
-    'post-update' : false,
-    'pre-auto-gc' : true,
-    'post-rewrite' : false,
-};
-
 var hookFile = __dirname + '/bin/hook.js';
 
 module.exports = function (repoDir, cb) {
@@ -38,7 +18,7 @@ module.exports = function (repoDir, cb) {
         this.emit = function (hookName, args, finish) {
             var xs = emitter.listeners(hookName);
             if (xs.length === 0) finish(true)
-            else if (!canAbort[hookName]) finish(true)
+            else if (!hook.canAbort[hookName]) finish(true)
             else {
                 var pending = xs.length;
                 var allOk = true;
@@ -53,7 +33,7 @@ module.exports = function (repoDir, cb) {
         };
     }).listen(port);
     
-    seq(Object.keys(canAbort))
+    seq(hook.names)
         .seq(function () {
             fs.writeFile(hookDir + '/.git-emit.port', port.toString(), this);
         })
