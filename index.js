@@ -14,13 +14,17 @@ module.exports = function (repoDir, cb) {
     
     var port = Math.floor(Math.random() * ((1<<16) - 1e4) + 1e4);
     
-    dnode(function (remote, conn) {
+    emitter.close = function () {
+        server.close();
+    };
+    
+    var server = emitter.server = dnode(function (remote, conn) {
         this.emit = function (hookName, args, finish) {
             var xs = emitter.listeners(hookName);
             if (xs.length === 0) finish(true)
             else if (!hook.canAbort[hookName]) {
                 finish(true);
-                emitter.emit(hookName, hook(hookName, args);
+                emitter.emit(hookName, hook(hookName, args));
             }
             else {
                 var pending = xs.length;
@@ -35,10 +39,11 @@ module.exports = function (repoDir, cb) {
         };
     }).listen(port);
     
-    seq(hook.names)
+    seq()
         .seq(function () {
             fs.writeFile(hookDir + '/.git-emit.port', port.toString(), this);
         })
+        .set(hook.names)
         .parEach_(function (next, name) {
             var file = hookDir + '/' + name;
             fs.lstat(file, function (err, s) {
