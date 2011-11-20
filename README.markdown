@@ -91,7 +91,8 @@ You can listen for events corresponding to github hooks.
 
 All events receive an update object.
 
-Passive events fire and cannot influence the acceptance any actions.
+Passive events fire and cannot influence the acceptance of any actions.
+Calling `update.accept()` or `update.reject()` does nothing.
 
 Abortable events *MUST* respond to the update object with either
 an `update.accept()` or an `update.reject()`.
